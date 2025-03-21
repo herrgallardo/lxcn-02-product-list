@@ -23,6 +23,9 @@ while (!exitApplication)
             productManager.DisplayProducts();
             PressAnyKeyToContinue();
             break;
+        case "3":
+            SearchProducts(productManager);
+            break;
         case "q":
             exitApplication = true;
             break;
@@ -42,8 +45,41 @@ void DisplayMainMenu()
     Console.WriteLine("*** PRODUCT LIST APPLICATION ***");
     Console.WriteLine("1. Add products");
     Console.WriteLine("2. View products");
+    Console.WriteLine("3. Search products");
     Console.WriteLine("q. Quit application");
     Console.Write("Select an option: ");
+}
+
+void SearchProducts(ProductManager manager)
+{
+    Console.Clear();
+    Console.WriteLine("*** SEARCH PRODUCTS ***");
+
+    // Check if there are any products to search
+    if (manager.ProductCount == 0)
+    {
+        Console.WriteLine("No products to search. Please add products first.");
+        PressAnyKeyToContinue();
+        return;
+    }
+
+    Console.Write("Enter search term (category or product name): ");
+    string searchTerm = Console.ReadLine() ?? "";
+
+    // Perform search
+    var searchResults = manager.SearchProducts(searchTerm);
+
+    if (searchResults.Any())
+    {
+        Console.WriteLine($"\nFound {searchResults.Count} product(s) matching '{searchTerm}'");
+        manager.DisplayProducts(searchResults, searchTerm);
+    }
+    else
+    {
+        Console.WriteLine($"No products found matching '{searchTerm}'");
+    }
+
+    PressAnyKeyToContinue();
 }
 
 void AddProducts(ProductManager manager)
@@ -181,8 +217,7 @@ class Product
 
     public Product(string category, string name, decimal price)
     {
-        // Validate inputs before setting properties
-        // This second layer of validation ensures data integrity even if UI validation is bypassed
+        // Validate inputs before setting properties        
 
         // Category validation
         if (string.IsNullOrWhiteSpace(category))
@@ -196,7 +231,7 @@ class Product
         if (name.Length > 25)
             throw new ArgumentException("Product name is too long. Maximum 25 characters allowed.");
 
-        // Price validation - ensures business rules are enforced
+        // Price validation
         if (price < 0)
             throw new ArgumentException("Price cannot be negative.");
         if (price > 1000000)
@@ -208,7 +243,7 @@ class Product
     }
 }
 
-// Manages a collection of products with operations for adding and displaying
+// Manages a collection of products with operations for adding, displaying, and searching
 class ProductManager
 {
     private List<Product> _products;
@@ -217,6 +252,9 @@ class ProductManager
     {
         _products = new List<Product>();
     }
+
+    // Property to get the number of products
+    public int ProductCount => _products.Count;
 
     // Adds a new product to the collection
     public void AddProduct(string category, string name, decimal price)
@@ -228,30 +266,57 @@ class ProductManager
     // Gets the total price of all products - refactored with LINQ
     public decimal GetTotalPrice() => _products.Sum(p => p.Price);
 
+    // Searches for products by name or category
+    public List<Product> SearchProducts(string searchTerm)
+    {
+        return _products
+            .Where(p =>
+                p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                p.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
     // Displays all products sorted by price from low to high
-    public void DisplayProducts()
+    public void DisplayProducts(List<Product>? productsToDisplay = null, string? searchTerm = null)
     {
         Console.WriteLine("\n=================================================================");
         Console.WriteLine(" PRODUCTS IN YOUR LIST ");
         Console.WriteLine("=================================================================");
 
-        if (!_products.Any()) // LINQ to check if list is empty
+        // Use the full list of products if no specific list is provided
+        var displayList = productsToDisplay ?? _products;
+
+        if (!displayList.Any())
         {
-            Console.WriteLine("No products added.");
+            Console.WriteLine("No products found.");
         }
         else
         {
-            // Sort products by price from low to high using LINQ
-            var sortedProducts = _products.OrderBy(p => p.Price);
+            // Sort products by price from low to high
+            var sortedProducts = displayList.OrderBy(p => p.Price);
 
             // Print header
             Console.WriteLine($"{"Category",-25} {"Product",-25} {"Price",10}");
             Console.WriteLine(new string('-', 62));
 
-            // Print each product with formatting
-            foreach (var product in sortedProducts)
+            // Print each product with formatting and optional highlighting
+            foreach (var product in _products.OrderBy(p => p.Price))
             {
+                // Check if the product should be highlighted
+                bool shouldHighlight = !string.IsNullOrEmpty(searchTerm) &&
+                    (product.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                     product.Category.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+                if (shouldHighlight)
+                {
+                    Console.BackgroundColor = ConsoleColor.Blue;
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+
                 Console.WriteLine($"{product.Category,-25} {product.Name,-25} {product.Price,10:F2}");
+
+                // Reset colors
+                Console.ResetColor();
             }
 
             // Print summary
