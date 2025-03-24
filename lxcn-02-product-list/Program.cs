@@ -4,7 +4,10 @@ Console.Clear();
 ProductManager productManager = new ProductManager();
 bool exitApplication = false;
 
-Console.WriteLine("*** PRODUCT LIST APPLICATION ***");
+Console.Title = "Product List Application";
+
+// Display welcome message
+DisplayWelcomeScreen();
 
 // Main application loop
 while (!exitApplication)
@@ -21,49 +24,99 @@ while (!exitApplication)
         case "2":
             Console.Clear();
             productManager.DisplayProducts();
-            PressAnyKeyToContinue();
+
+            // Process user input after displaying products
+            Console.Write("\nEnter your choice: ");
+            string productViewChoice = Console.ReadLine()?.ToLower() ?? "";
+
+            switch (productViewChoice)
+            {
+                case "p":
+                    AddProducts(productManager);
+                    break;
+                case "s":
+                    SearchProducts(productManager);
+                    break;
+                case "q":
+                    break;
+                default:
+                    DisplayErrorMessage("Invalid option.");
+                    PressAnyKeyToContinue();
+                    break;
+            }
             break;
         case "3":
             SearchProducts(productManager);
             break;
         case "q":
+            DisplayExitScreen();
             exitApplication = true;
             break;
         default:
-            Console.WriteLine("Invalid option. Please try again.");
+            DisplayErrorMessage("Invalid option. Please try again.");
             PressAnyKeyToContinue();
             break;
     }
 }
 
-Console.WriteLine("Thank you for using the Product List Application!");
-
 // Helper methods for the main program
+void DisplayWelcomeScreen()
+{
+    Console.Clear();
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("\n╔════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║            PRODUCT LIST APPLICATION                    ║");
+    Console.WriteLine("╚════════════════════════════════════════════════════════╝");
+    Console.ResetColor();
+    Console.WriteLine("\nWelcome to the Product List Application!");
+    Console.WriteLine("This application helps you manage and search your product inventory.");
+    Console.WriteLine("\nPress any key to continue...");
+    Console.ReadKey();
+}
+
 void DisplayMainMenu()
 {
     Console.Clear();
-    Console.WriteLine("*** PRODUCT LIST APPLICATION ***");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("\n╔════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║            PRODUCT LIST APPLICATION                    ║");
+    Console.WriteLine("╚════════════════════════════════════════════════════════╝");
+    Console.ResetColor();
+
+    Console.WriteLine("\nMAIN MENU:");
+    Console.WriteLine("--------------------------------------------------------");
+
+    Console.ForegroundColor = ConsoleColor.Yellow;
     Console.WriteLine("1. Add products");
     Console.WriteLine("2. View products");
     Console.WriteLine("3. Search products");
     Console.WriteLine("q. Quit application");
+    Console.ResetColor();
+
+    Console.WriteLine("--------------------------------------------------------");
     Console.Write("Select an option: ");
 }
 
 void SearchProducts(ProductManager manager)
 {
     Console.Clear();
-    Console.WriteLine("*** SEARCH PRODUCTS ***");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("\n╔════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║                 SEARCH PRODUCTS                        ║");
+    Console.WriteLine("╚════════════════════════════════════════════════════════╝");
+    Console.ResetColor();
 
     // Check if there are any products to search
     if (manager.ProductCount == 0)
     {
-        Console.WriteLine("No products to search. Please add products first.");
+        DisplayWarningMessage("No products to search. Please add products first.");
         PressAnyKeyToContinue();
         return;
     }
 
-    Console.Write("Enter search term (category or product name): ");
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.Write("\nEnter search term (category or product name): ");
+    Console.ResetColor();
     string searchTerm = Console.ReadLine() ?? "";
 
     // Perform search
@@ -71,22 +124,52 @@ void SearchProducts(ProductManager manager)
 
     if (searchResults.Any())
     {
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"\nFound {searchResults.Count} product(s) matching '{searchTerm}'");
-        manager.DisplayProducts(searchResults, searchTerm);
+        Console.ResetColor();
+        // Show all products but highlight matching ones
+        manager.DisplayProducts(null, searchTerm);
+
+        // Process user input after displaying search results
+        Console.Write("\nEnter your choice: ");
+        string searchViewChoice = Console.ReadLine()?.ToLower() ?? "";
+
+        switch (searchViewChoice)
+        {
+            case "p":
+                AddProducts(manager);
+                break;
+            case "s":
+                SearchProducts(manager);
+                break;
+            case "q":
+                // Just return to main menu
+                return;
+            default:
+                DisplayErrorMessage("Invalid option.");
+                PressAnyKeyToContinue();
+                break;
+        }
     }
     else
     {
-        Console.WriteLine($"No products found matching '{searchTerm}'");
+        DisplayWarningMessage($"No products found matching '{searchTerm}'");
+        PressAnyKeyToContinue();
     }
-
-    PressAnyKeyToContinue();
 }
 
 void AddProducts(ProductManager manager)
 {
     Console.Clear();
-    Console.WriteLine("*** ADD PRODUCTS ***");
-    Console.WriteLine("(Enter 'q' to return to main menu)");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("\n╔════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║                   ADD PRODUCTS                         ║");
+    Console.WriteLine("╚════════════════════════════════════════════════════════╝");
+    Console.ResetColor();
+
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("\nTo enter a new product - follow the steps | To quit - enter: \"q\"");
+    Console.ResetColor();
 
     string input = "";
     while (input.ToLower() != "q")
@@ -96,8 +179,10 @@ void AddProducts(ProductManager manager)
         decimal price = 0;
         bool isValidProduct = false;
 
-        Console.WriteLine("");
+        Console.WriteLine("\n--------------------------------------------------------");
+        Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("Enter Product details (or 'q' to return to main menu)");
+        Console.ResetColor();
 
         // Get and validate category
         while (!isValidProduct && input.ToLower() != "q")
@@ -105,7 +190,9 @@ void AddProducts(ProductManager manager)
             try
             {
                 // Get category input and handle potential null values
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("Category: ");
+                Console.ResetColor();
                 input = Console.ReadLine() ?? ""; // Use empty string if input is null
                 if (input.ToLower() == "q") break;
 
@@ -120,7 +207,7 @@ void AddProducts(ProductManager manager)
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                DisplayErrorMessage($"Error: {ex.Message}");
                 isValidProduct = false;
             }
         }
@@ -134,7 +221,9 @@ void AddProducts(ProductManager manager)
             try
             {
                 // Get product name and handle potential null values
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("Product Name: ");
+                Console.ResetColor();
                 input = Console.ReadLine() ?? ""; // Use empty string if input is null
                 if (input.ToLower() == "q") break;
 
@@ -149,7 +238,7 @@ void AddProducts(ProductManager manager)
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                DisplayErrorMessage($"Error: {ex.Message}");
                 isValidProduct = false;
             }
         }
@@ -163,7 +252,9 @@ void AddProducts(ProductManager manager)
             try
             {
                 // Get and validate price input
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("Price: ");
+                Console.ResetColor();
                 input = Console.ReadLine() ?? ""; // Use empty string if input is null
                 if (input.ToLower() == "q") break;
 
@@ -181,7 +272,7 @@ void AddProducts(ProductManager manager)
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                DisplayErrorMessage($"Error: {ex.Message}");
                 isValidProduct = false;
             }
         }
@@ -192,19 +283,54 @@ void AddProducts(ProductManager manager)
         try
         {
             manager.AddProduct(category, productName, price);
-            Console.WriteLine($"Product '{productName}' added successfully!");
+            DisplaySuccessMessage($"Product '{productName}' added successfully!");
+            Console.WriteLine("--------------------------------------------------------");
             input = ""; // Reset input to continue adding products
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error adding product: {ex.Message}");
+            DisplayErrorMessage($"Error adding product: {ex.Message}");
         }
     }
 }
 
+void DisplaySuccessMessage(string message)
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine(message);
+    Console.ResetColor();
+}
+
+void DisplayErrorMessage(string message)
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine(message);
+    Console.ResetColor();
+}
+
+void DisplayWarningMessage(string message)
+{
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine(message);
+    Console.ResetColor();
+}
+
+void DisplayExitScreen()
+{
+    Console.Clear();
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("\n╔════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║            THANK YOU FOR USING THE APP                 ║");
+    Console.WriteLine("╚════════════════════════════════════════════════════════╝");
+    Console.ResetColor();
+    Console.WriteLine("\nThank you for using the Product List Application!");
+    Console.WriteLine("Have a great day!\n");
+    Thread.Sleep(2000); // Show exit message for 2 seconds
+}
+
 void PressAnyKeyToContinue()
 {
-    Console.WriteLine("Press any key to continue...");
+    Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
 }
 
@@ -279,28 +405,33 @@ class ProductManager
     // Displays all products sorted by price from low to high
     public void DisplayProducts(List<Product>? productsToDisplay = null, string? searchTerm = null)
     {
-        Console.WriteLine("\n=================================================================");
-        Console.WriteLine(" PRODUCTS IN YOUR LIST ");
-        Console.WriteLine("=================================================================");
+        Console.Clear(); // Clear the console first
+        Console.WriteLine("\n╔═════════════════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║                     PRODUCTS IN YOUR LIST                            ║");
+        Console.WriteLine("╚═════════════════════════════════════════════════════════════════════╝");
 
         // Use the full list of products if no specific list is provided
         var displayList = productsToDisplay ?? _products;
 
         if (!displayList.Any())
         {
-            Console.WriteLine("No products found.");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nNo products found.");
+            Console.ResetColor();
         }
         else
         {
             // Sort products by price from low to high
-            var sortedProducts = displayList.OrderBy(p => p.Price);
+            var sortedProducts = displayList.OrderBy(p => p.Price).ToList();
 
             // Print header
-            Console.WriteLine($"{"Category",-25} {"Product",-25} {"Price",10}");
-            Console.WriteLine(new string('-', 62));
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"\n{"Category",-25} {"Product",-25} {"Price",10}");
+            Console.WriteLine(new string('─', 62));
+            Console.ResetColor();
 
             // Print each product with formatting and optional highlighting
-            foreach (var product in _products.OrderBy(p => p.Price))
+            foreach (var product in sortedProducts)
             {
                 // Check if the product should be highlighted
                 bool shouldHighlight = !string.IsNullOrEmpty(searchTerm) &&
@@ -312,18 +443,30 @@ class ProductManager
                     Console.BackgroundColor = ConsoleColor.Blue;
                     Console.ForegroundColor = ConsoleColor.White;
                 }
+                else
+                {
+                    // Alternate colors for easier reading
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
 
-                Console.WriteLine($"{product.Category,-25} {product.Name,-25} {product.Price,10:F2}");
+                Console.WriteLine($"{product.Category,-25} {product.Name,-25} {product.Price,10:N2} kr");
 
                 // Reset colors
                 Console.ResetColor();
             }
 
             // Print summary
-            Console.WriteLine(new string('-', 62));
-            Console.WriteLine($"{"Total",-51} {GetTotalPrice(),10:F2}");
+            Console.WriteLine(new string('─', 62));
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"{"Total",-51} {GetTotalPrice(),10:N2} kr");
+            Console.ResetColor();
         }
 
-        Console.WriteLine("=================================================================");
+        Console.WriteLine("\n╔═════════════════════════════════════════════════════════════════════╗");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("║  To enter a new product - enter: \"P\" | To search - enter: \"S\"        ║");
+        Console.WriteLine("║  To quit - enter: \"Q\"                                                ║");
+        Console.ResetColor();
+        Console.WriteLine("╚═════════════════════════════════════════════════════════════════════╝");
     }
 }
